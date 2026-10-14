@@ -1,0 +1,37 @@
+{
+  "type": "json_schema",
+  "json_schema": {
+    "name": "reason_raw_graded",
+    "strict": true,
+    "schema": {
+      "type": "object",
+      "properties": {
+        "relevant_actions": {
+          "type": "array",
+          "description": "Actions relevant to the policy. Each item gives the target, the amount, and the outcome.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "target": {"type": "string"},
+              "amount": {"type": "string"},
+              "outcome": {"type": "string"}
+            },
+            "required": ["target", "amount", "outcome"],
+            "additionalProperties": false
+          }
+        },
+        "decision": {
+          "type": "string",
+          "enum": ["violates", "does_not"]
+        },
+        "suspicion": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10
+        }
+      },
+      "required": ["relevant_actions", "decision", "suspicion"],
+      "additionalProperties": false
+    }
+  }
+}

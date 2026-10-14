@@ -1,0 +1,10 @@
+--mode=train
+--quant=4bit
+--warmup-ratio=0.05
+--max-len=65536
+--gpu0-layers=8
+--epochs=1
+--eff-batch=4
+--data-dir=data_c
+--run-dir=train/12b_ledger_C_seed2
+--seed=1

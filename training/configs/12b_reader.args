@@ -1,0 +1,10 @@
+--mode=train
+--quant=4bit
+--warmup-ratio=0.05
+--max-len=8192
+--gpu0-layers=48
+--epochs=2
+--eff-batch=16
+--data-dir=data_reader
+--run-dir=train/12b_reader
+--seed=0

@@ -1,0 +1,38 @@
+{
+ "representation": "eventrecord",
+ "domain": "tau2 telecom",
+ "base_extractor": {
+  "file": "baselines/eventrecord.py",
+  "file_sha256": "ec3c7f841418fad982b6dd22d4b45e994ae9e7dc64e967a35bc12786b15bf20d",
+  "config_sha256": "computed at build time by build_eventrecord.rule_hash() with budget replaced; regexes unchanged",
+  "used": "identifiers(), render(), drop_repeats(), trim_even(), build_record(), load_tokenizer(); Gemma-4-31B tokenizer"
+ },
+ "inputs": "trajectory files listed in tau2/tau2_telecom/manifest.json (paths only). Policies, labels and rendered_inputs.json are not read.",
+ "calls": {
+  "source": "each turn's 'calls' list, in order; name and arguments (json.dumps(arguments, sort_keys=True)), as build_eventrecord.tool_calls does for list-form calls",
+  "pairing": "by position: the k-th call of a turn gets the k-th of the consecutive result turns that FOLLOW it (role 'tool' for actor agent, role 'user_tool' for actor user); results beyond the last call are appended to the last call; a call with no result gets an empty result",
+  "user_actions": "a call with actor 'user' is rendered as '<name> (user action)'; agent calls are rendered as '<name>'"
+ },
+ "identifiers_per_call_in_order": [
+  "status:error when the paired result has error=true or its content starts with 'Error'",
+  "telecom fields from the call arguments, then from the paired result when it parses as JSON (json.loads, then ast.literal_eval); nested dicts and lists are walked; each scalar value under a listed key is emitted as '<key>:<value>'",
+  "status lines from a result that does not parse as JSON (STATUS_RES below)",
+  "base identifiers(call arguments text, result text) unchanged: email, url, account, amount, path, date, domain, name"
+ ],
+ "telecom_keys": [
+  "customer_id", "line_id", "line_ids", "bill_id", "bill_ids", "id", "phone_number",
+  "plan_id", "device_id", "gb_amount", "amount", "charge", "total_due",
+  "new_data_refueling_gb", "data_refueling_gb", "data_used_gb", "data_limit_gb",
+  "status", "account_status", "roaming_enabled", "mode", "app_name", "permission", "enabled"
+ ],
+ "status_res": [
+  "(?i)\\b[A-Za-z][\\w\\- ]{1,40}? is (?:now|currently)(?: turned)? (?:on|off|enabled|disabled)\\b",
+  "(?m)^[A-Z][\\w\\- /]{1,40}:[ \\t]*[^\\n|]{1,40}$"
+ ],
+ "dedup": "within a call, by (type, casefolded value for email/domain/name, otherwise exact), as build_eventrecord",
+ "budget_tokens": 948,
+ "budget_source": "median Gemma-token length of the untrained structured ledger (writers/a12 constructor_records record.ledger_text) on the 300 tau2 telecom trajectories; tau2/er_inspect.txt",
+ "trim": "build_eventrecord.build_record unchanged: if over budget, drop identifiers already kept on an earlier call; if still over, trim each call to an equal identifier-token share",
+ "render": "build_eventrecord.render: '[i] <name>' then one '<type>:<value>' line per identifier, blocks separated by a blank line",
+ "read": "READ_MODE=event (record.ledger_text verbatim), same benches and hash files as the other tau2 reads"
+}

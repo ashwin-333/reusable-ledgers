@@ -1,0 +1,170 @@
+{
+ "n_subset": 100,
+ "n_successful_state_changing": 1687,
+ "ledger_reference_claimed": {},
+ "untrained_ledger": {
+  "n_actions": 1687,
+  "listed": 0,
+  "listed_share": 0.0,
+  "n_with_identifier": 803,
+  "identifier_on_action": 0,
+  "identifier_share_of_identified": 0.0,
+  "identifier_share_of_all": 0.0,
+  "most_omitted": [
+   [
+    "add_row",
+    284
+   ],
+   [
+    "send_email",
+    210
+   ],
+   [
+    "set_cell_value",
+    165
+   ],
+   [
+    "buy_flight_ticket",
+    109
+   ],
+   [
+    "add_multiple_rows",
+    105
+   ],
+   [
+    "add_post_image",
+    104
+   ],
+   [
+    "create_sheet",
+    66
+   ],
+   [
+    "add_multiple_columns",
+    63
+   ]
+  ]
+ },
+ "fine_tuned_ledger": {
+  "n_actions": 1687,
+  "listed": 0,
+  "listed_share": 0.0,
+  "n_with_identifier": 803,
+  "identifier_on_action": 0,
+  "identifier_share_of_identified": 0.0,
+  "identifier_share_of_all": 0.0,
+  "most_omitted": [
+   [
+    "add_row",
+    284
+   ],
+   [
+    "send_email",
+    210
+   ],
+   [
+    "set_cell_value",
+    165
+   ],
+   [
+    "buy_flight_ticket",
+    109
+   ],
+   [
+    "add_multiple_rows",
+    105
+   ],
+   [
+    "add_post_image",
+    104
+   ],
+   [
+    "create_sheet",
+    66
+   ],
+   [
+    "add_multiple_columns",
+    63
+   ]
+  ]
+ },
+ "action_summary_8192": {
+  "n_actions": 1687,
+  "listed": 1499,
+  "listed_share": 0.8885595732068761,
+  "n_with_identifier": 803,
+  "identifier_on_action": 377,
+  "identifier_share_of_identified": 0.46948941469489414,
+  "identifier_share_of_all": 0.2234736218138708,
+  "most_omitted": [
+   [
+    "set_cell_value",
+    29
+   ],
+   [
+    "add_global_rule",
+    17
+   ],
+   [
+    "send_email",
+    14
+   ],
+   [
+    "share_location",
+    12
+   ],
+   [
+    "post_webpage",
+    9
+   ],
+   [
+    "remove_multiple_user_rules_by_id",
+    9
+   ],
+   [
+    "create_file",
+    8
+   ],
+   [
+    "update_ticket_description",
+    8
+   ]
+  ]
+ },
+ "cua_writer_output_limit": {
+  "trained": {
+   "n_output_limit": 15,
+   "n_trajectories": 159
+  },
+  "trained_seed2": {
+   "n_output_limit": 10,
+   "n_trajectories": 159
+  }
+ },
+ "neutral": {
+  "n_successful_state_changing": 1772,
+  "systems": {
+   "untrained": {
+    "n_actions_with_identifier": 611,
+    "anywhere": 243,
+    "anywhere_share": 0.397708674304419,
+    "paired": 185,
+    "paired_share": 0.3027823240589198
+   },
+   "fine_tuned": {
+    "n_actions_with_identifier": 611,
+    "anywhere": 349,
+    "anywhere_share": 0.5711947626841244,
+    "paired": 346,
+    "paired_share": 0.5662847790507365
+   },
+   "action_summary": {
+    "n_actions_with_identifier": 611,
+    "anywhere": 476,
+    "anywhere_share": 0.779050736497545,
+    "paired": 435,
+    "paired_share": 0.7119476268412439
+   }
+  }
+ }
+}

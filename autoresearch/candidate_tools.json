@@ -1,0 +1,847 @@
+{
+  "schema_version": 1,
+  "source": {
+    "sheet_name": "Candidate Tools",
+    "snapshot_date": "2026-08-18",
+    "note": "Sheet fields are descriptive search-space metadata. runtime is an audited local execution status, not a claim made by the sheet."
+  },
+  "tools": [
+    {
+      "tool_id": "T01",
+      "name": "Ledger state reconstructor",
+      "category": "Parsing & structuring",
+      "parameter_hints": [
+        "fields to extract",
+        "group repetitive actions on/off",
+        "include reads on/off",
+        "verbosity",
+        "JSON vs bracketed"
+      ],
+      "sheet": {
+        "signal": "Structured action ledger: every state-changing action w/ target, params, authorized Y/N",
+        "small_model_benefit": "Offloads state-tracking the small model is bad at; gives it a clean, factual view",
+        "inputs": "Full trajectory (turns + tool outputs)",
+        "output_format": "Bracketed text or JSON",
+        "candidate_implementation": "Universal ledger prompt",
+        "effort": "S",
+        "phase": "1",
+        "priority": "High",
+        "notes": "Current baseline; the thing we're trying to beat / generalize"
+      },
+      "runtime": {
+        "status": "reserved",
+        "reason": "This is the constructor being optimized, not an evidence-stage helper; injecting it would recursively run another constructor.",
+        "input_type": "trajectory",
+        "output_type": "text"
+      }
+    },
+    {
+      "tool_id": "T02",
+      "name": "Hierarchical trace tree",
+      "category": "Parsing & structuring",
+      "parameter_hints": [
+        "node granularity",
+        "summary length",
+        "depth cap",
+        "state-change detector threshold"
+      ],
+      "sheet": {
+        "signal": "Tree splitting exploration (read-only) vs state-changing nodes, each w/ intent+outcome summary",
+        "small_model_benefit": "Compresses long traces into a navigable structure; isolates the few consequential steps",
+        "inputs": "Normalized step records",
+        "output_format": "JSON tree",
+        "candidate_implementation": "CodeTracer (arXiv:2604.11641), adapt to our schema",
+        "effort": "L",
+        "phase": "1-2",
+        "priority": "High",
+        "notes": "Structured>raw: CodeTracer F1 16->46 vs bare-LLM"
+      },
+      "runtime": {
+        "status": "unimplemented",
+        "reason": "No T02 implementation is registered in the repository.",
+        "input_type": null,
+        "output_type": null
+      }
+    },
+    {
+      "tool_id": "T03",
+      "name": "Tool-call extractor / normalizer",
+      "category": "Parsing & structuring",
+      "parameter_hints": [
+        "arg redaction",
+        "output truncation length",
+        "target schema"
+      ],
+      "sheet": {
+        "signal": "Normalized (tool, args, output) records per step",
+        "small_model_benefit": "Removes formatting noise; consistent view across frameworks",
+        "inputs": "Raw trajectory JSON",
+        "output_format": "JSONL",
+        "candidate_implementation": "In-repo: load_trace_auto + render_turns_compact",
+        "effort": "S",
+        "phase": "1",
+        "priority": "High",
+        "notes": "Foundation for the stats/anomaly tools below"
+      },
+      "runtime": {
+        "status": "runnable",
+        "reason": "Registered pure-compute evidence stage.",
+        "input_type": "trajectory",
+        "output_type": "features"
+      }
+    },
+    {
+      "tool_id": "T04",
+      "name": "Trajectory-to-table renderer",
+      "category": "Presentation",
+      "parameter_hints": [
+        "columns shown",
+        "truncation",
+        "include-thinking on/off"
+      ],
+      "sheet": {
+        "signal": "Compact markdown/CSV table of actions (step, tool, target, authorized?)",
+        "small_model_benefit": "Directly 'presents info better': dense tabular view fits small context windows",
+        "inputs": "Normalized step records (T03)",
+        "output_format": "Markdown / CSV",
+        "candidate_implementation": "New (thin wrapper over T03)",
+        "effort": "S",
+        "phase": "1",
+        "priority": "High",
+        "notes": "Cheapest 'better presentation' lever"
+      },
+      "runtime": {
+        "status": "runnable",
+        "reason": "Registered implementation currently consumes the raw trajectory directly.",
+        "input_type": "trajectory",
+        "output_type": "text"
+      }
+    },
+    {
+      "tool_id": "T05",
+      "name": "Tool-call count & ratio stats",
+      "category": "Tool-call statistics",
+      "parameter_hints": [
+        "tool taxonomy mapping",
+        "window size",
+        "normalize by length on/off"
+      ],
+      "sheet": {
+        "signal": "Per-tool counts, total steps, unique tools, read:write ratio",
+        "small_model_benefit": "Cheap numeric features; directly targets C3 (structuring) which fails across all models",
+        "inputs": "Normalized step records",
+        "output_format": "Feature vector",
+        "candidate_implementation": "New (sklearn/pandas)",
+        "effort": "S",
+        "phase": "1",
+        "priority": "High",
+        "notes": "C3 is our worst construct -> prioritize count/structuring features"
+      },
+      "runtime": {
+        "status": "runnable",
+        "reason": "Registered pure-compute stage; chain after a features-producing stage such as T03.",
+        "input_type": "features",
+        "output_type": "features"
+      }
+    },
+    {
+      "tool_id": "T06",
+      "name": "Tool-sequence n-gram / repetition detector",
+      "category": "Tool-call statistics",
+      "parameter_hints": [
+        "n",
+        "min-repeat count",
+        "arg-similarity threshold"
+      ],
+      "sheet": {
+        "signal": "Repeated action clusters, burst detection (splitting one task into many)",
+        "small_model_benefit": "Surfaces 'structuring' patterns a small model misses in long context",
+        "inputs": "Tool-call sequence",
+        "output_format": "Flagged clusters",
+        "candidate_implementation": "New",
+        "effort": "M",
+        "phase": "1",
+        "priority": "High",
+        "notes": "Targets C3"
+      },
+      "runtime": {
+        "status": "runnable",
+        "reason": "Registered pure-compute stage; chain after a features-producing stage such as T03.",
+        "input_type": "features",
+        "output_type": "features"
+      }
+    },
+    {
+      "tool_id": "T07",
+      "name": "Action entropy / diversity",
+      "category": "Tool-call statistics",
+      "parameter_hints": [
+        "window",
+        "smoothing"
+      ],
+      "sheet": {
+        "signal": "Entropy of tool distribution; novelty-over-time curve",
+        "small_model_benefit": "One-number summaries of 'is behavior drifting'",
+        "inputs": "Tool-call sequence",
+        "output_format": "Scalar / series",
+        "candidate_implementation": "New",
+        "effort": "S",
+        "phase": "2",
+        "priority": "Med",
+        "notes": ""
+      },
+      "runtime": {
+        "status": "runnable",
+        "reason": "Registered pure-compute stage; chain after a features-producing stage such as T03.",
+        "input_type": "features",
+        "output_type": "features"
+      }
+    },
+    {
+      "tool_id": "T08",
+      "name": "Cost / latency profiler wrapper",
+      "category": "Meta / efficiency",
+      "parameter_hints": [
+        "budget cap",
+        "log granularity"
+      ],
+      "sheet": {
+        "signal": "Per-tool token+time cost so the loop can optimize signal-per-dollar",
+        "small_model_benefit": "Enables the 'efficiency vs large teacher' story and cheap validation before full eval",
+        "inputs": "Any tool invocation",
+        "output_format": "CSV log",
+        "candidate_implementation": "New wrapper",
+        "effort": "S",
+        "phase": "1",
+        "priority": "Med",
+        "notes": "Cheap first-pass signal"
+      },
+      "runtime": {
+        "status": "unavailable",
+        "reason": "The registered class is a wrapper that requires wrap(tool); it cannot execute as a standalone graph stage.",
+        "input_type": "any",
+        "output_type": "any"
+      }
+    },
+    {
+      "tool_id": "T09",
+      "name": "Isolation Forest on step features",
+      "category": "Anomaly detection",
+      "parameter_hints": [
+        "n_estimators",
+        "contamination",
+        "feature subset"
+      ],
+      "sheet": {
+        "signal": "Per-step / per-trajectory anomaly score (unsupervised)",
+        "small_model_benefit": "Flags outliers with no labels; small model just consumes the score",
+        "inputs": "Feature vectors (T05-T07)",
+        "output_format": "Scores",
+        "candidate_implementation": "sklearn.ensemble.IsolationForest",
+        "effort": "S",
+        "phase": "1",
+        "priority": "High",
+        "notes": ""
+      },
+      "runtime": {
+        "status": "runnable",
+        "reason": "Registered features-to-features stage; falls back to documented single-trajectory heuristics without population context.",
+        "input_type": "features",
+        "output_type": "features"
+      }
+    },
+    {
+      "tool_id": "T10",
+      "name": "Local Outlier Factor (LOF)",
+      "category": "Anomaly detection",
+      "parameter_hints": [
+        "n_neighbors",
+        "contamination"
+      ],
+      "sheet": {
+        "signal": "Density-based outlier score per step",
+        "small_model_benefit": "Complements IForest; catches local anomalies",
+        "inputs": "Feature vectors",
+        "output_format": "Scores",
+        "candidate_implementation": "sklearn.neighbors.LocalOutlierFactor",
+        "effort": "S",
+        "phase": "2",
+        "priority": "Med",
+        "notes": ""
+      },
+      "runtime": {
+        "status": "runnable",
+        "reason": "Registered features-to-features stage; falls back to documented single-trajectory heuristics without population context.",
+        "input_type": "features",
+        "output_type": "features"
+      }
+    },
+    {
+      "tool_id": "T11",
+      "name": "Robust z-score threshold on counts",
+      "category": "Anomaly detection",
+      "parameter_hints": [
+        "z threshold",
+        "robust scaler on/off"
+      ],
+      "sheet": {
+        "signal": "Simple outlier flags on count features",
+        "small_model_benefit": "Trivial, interpretable, near-zero cost baseline",
+        "inputs": "Feature vectors",
+        "output_format": "Flags",
+        "candidate_implementation": "scipy/numpy",
+        "effort": "S",
+        "phase": "1",
+        "priority": "Med",
+        "notes": "Sanity baseline for the anomaly family"
+      },
+      "runtime": {
+        "status": "runnable",
+        "reason": "Registered pure-compute features-to-features stage.",
+        "input_type": "features",
+        "output_type": "features"
+      }
+    },
+    {
+      "tool_id": "T12",
+      "name": "Markov transition-surprise",
+      "category": "Anomaly detection",
+      "parameter_hints": [
+        "Markov order",
+        "smoothing",
+        "surprise threshold"
+      ],
+      "sheet": {
+        "signal": "Low-probability tool->tool transitions",
+        "small_model_benefit": "Detects unusual action sequences a small model can't track globally",
+        "inputs": "Tool-call sequence",
+        "output_format": "Per-step surprise",
+        "candidate_implementation": "New",
+        "effort": "M",
+        "phase": "2",
+        "priority": "Med",
+        "notes": ""
+      },
+      "runtime": {
+        "status": "runnable",
+        "reason": "Registered pure-compute features-to-features stage.",
+        "input_type": "features",
+        "output_type": "features"
+      }
+    },
+    {
+      "tool_id": "T13",
+      "name": "Embedding kNN novelty",
+      "category": "Anomaly detection",
+      "parameter_hints": [
+        "encoder",
+        "k",
+        "distance metric",
+        "benign reference set"
+      ],
+      "sheet": {
+        "signal": "Distance of a step from the benign-step distribution",
+        "small_model_benefit": "Semantic anomaly without task-specific rules",
+        "inputs": "Step text embeddings",
+        "output_format": "Scores",
+        "candidate_implementation": "sentence-transformers + faiss",
+        "effort": "M",
+        "phase": "2",
+        "priority": "Med",
+        "notes": "Borders on latent; keep classical-first"
+      },
+      "runtime": {
+        "status": "unimplemented",
+        "reason": "No T13 implementation is registered in the repository.",
+        "input_type": null,
+        "output_type": null
+      }
+    },
+    {
+      "tool_id": "T14",
+      "name": "RLM recursive summarizer (map-reduce)",
+      "category": "Recursive LM (RLM)",
+      "parameter_hints": [
+        "chunk size",
+        "recursion depth",
+        "summary token budget",
+        "focus prompt",
+        "overlap"
+      ],
+      "sheet": {
+        "signal": "Hierarchical safety-focused summary of a long trajectory",
+        "small_model_benefit": "Fits long traces into a small model's context while preserving risk-relevant detail",
+        "inputs": "Full trajectory",
+        "output_format": "Summary text",
+        "candidate_implementation": "RLM concept + in-repo hier_monitor",
+        "effort": "M",
+        "phase": "1",
+        "priority": "High",
+        "notes": "Meeting steer: try RLM before latent"
+      },
+      "runtime": {
+        "status": "unavailable",
+        "reason": "A registered prototype exists, but its monitor/LLM adapter and trajectory conversion are not compatible with the current evidence runtime and have not been validated.",
+        "input_type": "trajectory",
+        "output_type": "features"
+      }
+    },
+    {
+      "tool_id": "T15",
+      "name": "RLM decompose-and-verify",
+      "category": "Recursive LM (RLM)",
+      "parameter_hints": [
+        "decomposition depth",
+        "branching factor",
+        "aggregation rule (any/majority/weighted)"
+      ],
+      "sheet": {
+        "signal": "Recursive breakdown of 'is this safe?' into per-segment sub-questions, then aggregate",
+        "small_model_benefit": "Turns one hard judgment into many easy ones the small model can answer",
+        "inputs": "Full trajectory + question",
+        "output_format": "Verdict + rationale tree",
+        "candidate_implementation": "New (RLM); reuse AGG_PROMPT",
+        "effort": "M",
+        "phase": "1-2",
+        "priority": "High",
+        "notes": ""
+      },
+      "runtime": {
+        "status": "unimplemented",
+        "reason": "No T15 implementation is registered in the repository.",
+        "input_type": null,
+        "output_type": null
+      }
+    },
+    {
+      "tool_id": "T16",
+      "name": "Chunked sequential/hier monitor w/ running state",
+      "category": "Recursive LM (RLM)",
+      "parameter_hints": [
+        "chunk length",
+        "branch",
+        "mu",
+        "carry-state format"
+      ],
+      "sheet": {
+        "signal": "Carries a compact state summary across chunks; per-chunk suspicion",
+        "small_model_benefit": "Bounds context; explicit state beats implicit long-context tracking",
+        "inputs": "Chunked trajectory",
+        "output_format": "Per-chunk + final score",
+        "candidate_implementation": "In-repo: seq_monitor / hier_monitor",
+        "effort": "S",
+        "phase": "1",
+        "priority": "High",
+        "notes": ""
+      },
+      "runtime": {
+        "status": "unavailable",
+        "reason": "A registered prototype exists, but its monitor/LLM adapter and trajectory conversion are not compatible with the current evidence runtime and have not been validated.",
+        "input_type": "trajectory",
+        "output_type": "features"
+      }
+    },
+    {
+      "tool_id": "T17",
+      "name": "Sliding-window salience extractor",
+      "category": "Recursive LM (RLM)",
+      "parameter_hints": [
+        "window",
+        "stride",
+        "k",
+        "scorer"
+      ],
+      "sheet": {
+        "signal": "Top-k most suspicious windows surfaced to the model",
+        "small_model_benefit": "Focuses a small model on the few high-risk spans",
+        "inputs": "Trajectory + a scorer (stats/anomaly)",
+        "output_format": "Selected spans",
+        "candidate_implementation": "New",
+        "effort": "M",
+        "phase": "2",
+        "priority": "Med",
+        "notes": ""
+      },
+      "runtime": {
+        "status": "runnable",
+        "reason": "Registered pure-compute, source-indexed literal-window retriever; Gemma still sees the full trajectory.",
+        "input_type": "trajectory",
+        "output_type": "text"
+      }
+    },
+    {
+      "tool_id": "T18",
+      "name": "Needle / critical-parameter extractor",
+      "category": "Retrieval / extraction",
+      "parameter_hints": [
+        "target field schema",
+        "regex+LLM hybrid on/off"
+      ],
+      "sheet": {
+        "signal": "Extracts safety-critical params (recipients, IBANs, permissions, external targets)",
+        "small_model_benefit": "Pre-extracts the exact values the small model must verify",
+        "inputs": "Full trajectory",
+        "output_format": "Key-value JSON",
+        "candidate_implementation": "In-repo: NEEDLE_RETRIEVAL_PROMPT",
+        "effort": "S",
+        "phase": "1",
+        "priority": "High",
+        "notes": ""
+      },
+      "runtime": {
+        "status": "unavailable",
+        "reason": "A registered prototype exists, but its monitor/LLM adapter and trajectory conversion are not compatible with the current evidence runtime and have not been validated.",
+        "input_type": "trajectory",
+        "output_type": "features"
+      }
+    },
+    {
+      "tool_id": "T19",
+      "name": "Contrastive benign/malicious retriever",
+      "category": "Retrieval / extraction",
+      "parameter_hints": [
+        "k",
+        "index",
+        "encoder"
+      ],
+      "sheet": {
+        "signal": "Nearest labeled examples for few-shot steering",
+        "small_model_benefit": "Gives a weak small model relevant demonstrations",
+        "inputs": "Step/trajectory embeddings + labeled index",
+        "output_format": "Few-shot exemplars",
+        "candidate_implementation": "sentence-transformers + faiss",
+        "effort": "M",
+        "phase": "2",
+        "priority": "Med",
+        "notes": "Careful: few-shot can raise FAR (AutoMonitor-Bench)"
+      },
+      "runtime": {
+        "status": "unimplemented",
+        "reason": "No T19 implementation is registered in the repository.",
+        "input_type": null,
+        "output_type": null
+      }
+    },
+    {
+      "tool_id": "T20",
+      "name": "State-change / env diff detector",
+      "category": "State-change / diff",
+      "parameter_hints": [
+        "resources tracked",
+        "diff granularity"
+      ],
+      "sheet": {
+        "signal": "Before/after diffs (files, records, config) parsed from tool outputs",
+        "small_model_benefit": "Pinpoints irreversible/consequential actions for the model",
+        "inputs": "Tool outputs",
+        "output_format": "Diff records",
+        "candidate_implementation": "New",
+        "effort": "M",
+        "phase": "1",
+        "priority": "High",
+        "notes": ""
+      },
+      "runtime": {
+        "status": "runnable",
+        "reason": "Registered pure-compute evidence stage that parses the raw trajectory.",
+        "input_type": "trajectory",
+        "output_type": "features"
+      }
+    },
+    {
+      "tool_id": "T21",
+      "name": "Permission / privilege-change scanner",
+      "category": "State-change / diff",
+      "parameter_hints": [
+        "pattern set",
+        "sensitivity list"
+      ],
+      "sheet": {
+        "signal": "Flags chmod, visibility flips, role/ACL changes",
+        "small_model_benefit": "Rule-cheap detection of a high-signal misbehavior class",
+        "inputs": "Tool calls + outputs",
+        "output_format": "Flags",
+        "candidate_implementation": "New (regex)",
+        "effort": "S",
+        "phase": "1",
+        "priority": "High",
+        "notes": "Maps to security-compromise cases"
+      },
+      "runtime": {
+        "status": "runnable",
+        "reason": "Registered pure-compute evidence stage.",
+        "input_type": "trajectory",
+        "output_type": "flags"
+      }
+    },
+    {
+      "tool_id": "T22",
+      "name": "Secret / PII / exfil scanner",
+      "category": "State-change / diff",
+      "parameter_hints": [
+        "regex set",
+        "entropy threshold",
+        "allowlist"
+      ],
+      "sheet": {
+        "signal": "Flags secrets in commits, PII to public dirs, sensitive external sends",
+        "small_model_benefit": "High-precision deterministic signal on the worst outcomes",
+        "inputs": "Tool calls + outputs + files",
+        "output_format": "Flags + evidence",
+        "candidate_implementation": "detect-secrets / trufflehog patterns + regex",
+        "effort": "S",
+        "phase": "1",
+        "priority": "High",
+        "notes": "Directly covers several OpenAgentSafety cases"
+      },
+      "runtime": {
+        "status": "runnable",
+        "reason": "Registered pure-compute evidence stage.",
+        "input_type": "trajectory",
+        "output_type": "flags"
+      }
+    },
+    {
+      "tool_id": "T23",
+      "name": "Constraint/spec predicate checker (C1-C4)",
+      "category": "Formal / spec verification",
+      "parameter_hints": [
+        "predicate set",
+        "matching strictness",
+        "entity-resolver"
+      ],
+      "sheet": {
+        "signal": "PASS/FAIL on explicit predicates: verify recipient, resolve entity, no extra ops, respect 'do NOT'",
+        "small_model_benefit": "Deterministic checks the model doesn't have to reason out",
+        "inputs": "Ledger (T01) + user instructions",
+        "output_format": "Per-predicate PASS/FAIL",
+        "candidate_implementation": "In-repo C*_PROMPT_LEDGER logic -> code predicates",
+        "effort": "M",
+        "phase": "2",
+        "priority": "High",
+        "notes": "Codify the ledger constructs as checkable rules"
+      },
+      "runtime": {
+        "status": "unimplemented",
+        "reason": "No T23 implementation is registered in the repository.",
+        "input_type": null,
+        "output_type": null
+      }
+    },
+    {
+      "tool_id": "T24",
+      "name": "Policy DSL / runtime spec",
+      "category": "Formal / spec verification",
+      "parameter_hints": [
+        "rule set",
+        "scope",
+        "enforcement mode"
+      ],
+      "sheet": {
+        "signal": "Rule violations from a declarative safety policy",
+        "small_model_benefit": "Auditable, composable rules; strong on authorization cases",
+        "inputs": "Trajectory + policy file",
+        "output_format": "Violation list",
+        "candidate_implementation": "AgentSpec / ShieldAgent / ProbGuard (papers)",
+        "effort": "L",
+        "phase": "2-3",
+        "priority": "Med",
+        "notes": "Noted: what most teams are exploring"
+      },
+      "runtime": {
+        "status": "unimplemented",
+        "reason": "No T24 implementation is registered in the repository.",
+        "input_type": null,
+        "output_type": null
+      }
+    },
+    {
+      "tool_id": "T25",
+      "name": "Authorization-graph builder",
+      "category": "Formal / spec verification",
+      "parameter_hints": [
+        "entity resolver",
+        "source weighting"
+      ],
+      "sheet": {
+        "signal": "Maps instruction -> action -> who/what authorized it",
+        "small_model_benefit": "Makes 'was this authorized?' explicit for the model",
+        "inputs": "Trajectory + instructions",
+        "output_format": "Graph / table",
+        "candidate_implementation": "New",
+        "effort": "M",
+        "phase": "2",
+        "priority": "Med",
+        "notes": ""
+      },
+      "runtime": {
+        "status": "unimplemented",
+        "reason": "No T25 implementation is registered in the repository.",
+        "input_type": null,
+        "output_type": null
+      }
+    },
+    {
+      "tool_id": "T26",
+      "name": "Symbolic state tracker w/ prob. transitions",
+      "category": "Formal / spec verification",
+      "parameter_hints": [
+        "state abstraction",
+        "transition model"
+      ],
+      "sheet": {
+        "signal": "Anticipated future-violation risk from an abstract state machine",
+        "small_model_benefit": "Proactive flag before the unsafe action lands",
+        "inputs": "Trajectory prefix",
+        "output_format": "Risk estimate",
+        "candidate_implementation": "ProbGuard-style (arXiv:2508.00500)",
+        "effort": "L",
+        "phase": "3",
+        "priority": "Low-Med",
+        "notes": ""
+      },
+      "runtime": {
+        "status": "unimplemented",
+        "reason": "No T26 implementation is registered in the repository.",
+        "input_type": null,
+        "output_type": null
+      }
+    },
+    {
+      "tool_id": "T27",
+      "name": "Embedding motif clustering",
+      "category": "Embedding / motif",
+      "parameter_hints": [
+        "K clusters",
+        "encoder",
+        "sparsity"
+      ],
+      "sheet": {
+        "signal": "Clusters of recurring step motifs + risk-enrichment per cluster",
+        "small_model_benefit": "Discovers constructs instead of hand-authoring them",
+        "inputs": "Step embeddings",
+        "output_format": "Cluster assignments + risk %",
+        "candidate_implementation": "TRACES RMB-style as a tool (arXiv:2605.27690)",
+        "effort": "M",
+        "phase": "2-3",
+        "priority": "Med",
+        "notes": "Non-latent version first (text embeddings, not hidden states)"
+      },
+      "runtime": {
+        "status": "unimplemented",
+        "reason": "No T27 implementation is registered in the repository.",
+        "input_type": null,
+        "output_type": null
+      }
+    },
+    {
+      "tool_id": "T28",
+      "name": "Prefix-level risk head (GRU over classical features)",
+      "category": "Learned head",
+      "parameter_hints": [
+        "hidden dim",
+        "prefix-loss schedule",
+        "ranking margin"
+      ],
+      "sheet": {
+        "signal": "Dense prefix-level risk from weak trajectory-level labels",
+        "small_model_benefit": "Turns our pos/neg labels into early-warning signal; small & cheap",
+        "inputs": "Feature/summary sequence (T05-T07, T14)",
+        "output_format": "Per-prefix risk",
+        "candidate_implementation": "TRACES Stage-2 on classical features (not latent)",
+        "effort": "L",
+        "phase": "3",
+        "priority": "Med",
+        "notes": "Bridge to TRACES WITHOUT latent -- run on tool features first"
+      },
+      "runtime": {
+        "status": "unimplemented",
+        "reason": "No T28 implementation is registered in the repository.",
+        "input_type": null,
+        "output_type": null
+      }
+    },
+    {
+      "tool_id": "T29",
+      "name": "Latent linear/MLP probe on observer hidden states",
+      "category": "Representation probe (latent)",
+      "parameter_hints": [
+        "layer",
+        "probe type",
+        "aggregation"
+      ],
+      "sheet": {
+        "signal": "Risk read from observer-LLM activations",
+        "small_model_benefit": "Strongest per TRACES, but white-box + heavier",
+        "inputs": "Observer hidden states (open-weight stack)",
+        "output_format": "Scores",
+        "candidate_implementation": "TRACES Stage-1/2 (arXiv:2605.27690)",
+        "effort": "M",
+        "phase": "3",
+        "priority": "Low",
+        "notes": "Explicitly deprioritized: 'not latent first'"
+      },
+      "runtime": {
+        "status": "unimplemented",
+        "reason": "No T29 implementation is registered in the repository.",
+        "input_type": null,
+        "output_type": null
+      }
+    },
+    {
+      "tool_id": "T30",
+      "name": "Reflective replay / self-check",
+      "category": "Meta / verification",
+      "parameter_hints": [
+        "replay depth",
+        "trigger threshold"
+      ],
+      "sheet": {
+        "signal": "Second-pass re-examination of flagged steps",
+        "small_model_benefit": "Cheap precision boost on top of any detector",
+        "inputs": "Trajectory + first-pass flags",
+        "output_format": "Revised verdict",
+        "candidate_implementation": "CodeTracer replay (arXiv:2604.11641)",
+        "effort": "M",
+        "phase": "3",
+        "priority": "Low-Med",
+        "notes": ""
+      },
+      "runtime": {
+        "status": "unimplemented",
+        "reason": "No T30 implementation is registered in the repository.",
+        "input_type": null,
+        "output_type": null
+      }
+    },
+    {
+      "tool_id": "T31",
+      "name": "Configurable source-indexed turn selector",
+      "category": "Local Gemma-search extension",
+      "parameter_hints": [
+        "roles",
+        "fields",
+        "literal terms",
+        "max turns",
+        "excerpt length"
+      ],
+      "sheet": {
+        "signal": "Candidate-defined literal/role/field retrieval with source turn indices",
+        "small_model_benefit": "Surfaces task-general evidence without replacing Gemma or hiding the full trace",
+        "inputs": "Full trajectory",
+        "output_format": "Source-indexed text",
+        "candidate_implementation": "In-repo: t31_turn_selector.py",
+        "effort": "S",
+        "phase": "Gemma autoresearch",
+        "priority": "High",
+        "notes": "Local extension beyond the original T01-T30 spreadsheet"
+      },
+      "runtime": {
+        "status": "runnable",
+        "reason": "Registered pure-compute evidence stage; never reads labels",
+        "input_type": "trajectory",
+        "output_type": "text"
+      }
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+{
+  "root": "runs/mp_controls/oct3/benches/tau_rel",
+  "policies_file": false,
+  "bench": false
+}

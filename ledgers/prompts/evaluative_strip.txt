@@ -1,0 +1,15 @@
+Evaluative-field strip. Frozen before any stripped read.
+Superseded rule sha256, not applied: d063b248d31e080988d183e618dfb991a99478fa533a080d2ebf059c7e68f7aa
+
+Rule 1 applies on every line. Delete each field that starts at the exact string "Authorized:" and continues until the next " | " or the end of the line, whichever comes first. That span includes any parenthetical or dash explanation in the field. When a " | " follows the field, delete that separator too. When the field runs to the end of the line, also delete a preceding " | ". Leave every other field unchanged.
+
+Rule 2 applies only on lines that do not contain "Tool:". After rule 1, split the line into sentences after . ! ? or ; when that mark is followed by whitespace. Delete a sentence that contains any exact case-sensitive substring below.
+SUBSTRINGS:
+not authorized
+unauthorized
+However,
+should not
+sensitive
+
+On a line that contains "Tool:", do not apply rule 2.
+Drop a line that has no text left. Do not otherwise rewrite spelling, case, or order.

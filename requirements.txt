@@ -1,0 +1,18 @@
+# Scoring and reproduction (eval/, export/)
+numpy
+
+# Ledger writing, reading, and baselines (talk to an OpenAI-compatible server at OPENAI_BASE_URL)
+huggingface_hub
+tokenizers
+transformers
+scikit-learn
+
+# Training (training/)
+torch
+peft
+accelerate
+bitsandbytes
+
+# Optional
+# llmlingua        # baselines/compress_llmlingua.py
+# anthropic        # autoresearch/gemma_researcher.py controller

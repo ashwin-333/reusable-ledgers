@@ -1,0 +1,11 @@
+--mode=train
+--quant=bf16
+--warmup-ratio=0.05
+--max-len=65536
+--gpu0-layers=8
+--epochs=1
+--eff-batch=4
+--data-dir=data
+--keep-ids=ledger_keep_ids.json
+--run-dir=train/qwen_ledger
+--seed=0

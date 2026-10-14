@@ -1,0 +1,9 @@
+{
+  "prompt_file": "prompts/robust/graded_system.txt",
+  "prompt_sha256": "7ca008037b96e2d068b1b6ed50efbe646823171d15f80bf73ad64e82d3042865",
+  "schema_file": "prompts/robust/reason_schema.json",
+  "schema_sha256": "9eb0bb4ed4473cfe4e446a4c9ae68ddf765668c163a775f2ea62adb3592cc246",
+  "max_tokens": 2048,
+  "temperature": 0,
+  "seed": 0
+}

@@ -1,0 +1,6 @@
+Write a detailed chronological account of every action in this agent trajectory.
+For each action, give its arguments, identifiers, targets, amounts, and outcomes.
+Aim for about 1100 tokens.
+Include only events stated in the trajectory.
+Do not judge whether an action was allowed, prohibited, or suspicious.
+Do not mention policies, rules, or violations.

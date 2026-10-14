@@ -1,0 +1,5 @@
+Write a concise factual summary of this agent trajectory.
+State what the user asked and what the agent did.
+Include only events stated in the trajectory.
+Do not judge whether an action was allowed, prohibited, or suspicious.
+Do not mention policies, rules, or violations.
