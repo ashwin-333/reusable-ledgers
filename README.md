@@ -1,4 +1,4 @@
-# Write Once, Check Many: Reusable Ledgers for Post-Hoc Policy Compliance Auditing of Agent Trajectories
+# [Write Once, Check Many: Reusable Ledgers for Post-Hoc Policy Compliance Auditing of Agent Trajectories](https://arxiv.org/abs/2610.24483)
 
 Code, per-check scores, and labels for reusing one factual ledger per agent trajectory across many policy checks.
 
@@ -105,6 +105,20 @@ Two files were scrubbed of internal paths for release, so their hashes differ fr
 |---|---|---|
 | `baselines/tau2_eventrecord_rules.json` | `50e6e628cf32012f50dfe3c708e82d9ef9c6baf301a9e301b7c5059a5c6255a0` | `c6862a1799fd52b662b32d3772c9f24951f278e992c6ac6eddbb774465b1c211` |
 | `autoresearch/candidate_tools.json` | `49f713ba2d93b8fb36e766c53346bf46dd22159e5bd2da507535f7ffa3856c7b` | `976511095e09a233f0065ab3963337c4312a0f8b775cd329e44a0483c518f669` |
+
+## Citation
+
+```bibtex
+@misc{nagarajan2026writeoncecheckmany,
+      title={Write Once, Check Many: Reusable Ledgers for Post-Hoc Policy Compliance Auditing of Agent Trajectories},
+      author={Ashwin Nagarajan and Gursimran Panesar and Alicia Yang and Mona T. Diab and Virginia Smith and Aashiq Muhamed},
+      year={2026},
+      eprint={2610.24483},
+      archivePrefix={arXiv},
+      primaryClass={cs.CL},
+      url={https://arxiv.org/abs/2610.24483},
+}
+```
 
 ## License
 
